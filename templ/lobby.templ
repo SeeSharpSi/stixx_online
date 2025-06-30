@@ -1,0 +1,176 @@
+package templ
+
+import (
+	"seesharpsi/stixx_online/db"
+	"fmt"
+)
+
+templ Lobby(game *db.Game, players []db.Player, currentPlayerID int, isCreator bool) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<title>Qwixx - Game Lobby</title>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<link rel="stylesheet" type="text/css" href="/static/styles.css"/>
+			<script type="text/javascript" src="/static/htmx.min.js"></script>
+			<style>
+				body {
+					font-family: Arial, Helvetica, sans-serif;
+					background-color: #f0f0f0;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					min-height: 100vh;
+					margin: 0;
+				}
+				.lobby-container {
+					background-color: white;
+					padding: 2rem;
+					border-radius: 10px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					max-width: 600px;
+					width: 100%;
+				}
+				h1 {
+					text-align: center;
+					color: #333;
+					margin-bottom: 1rem;
+				}
+				.game-code {
+					text-align: center;
+					margin-bottom: 2rem;
+				}
+				.game-code-display {
+					font-size: 3rem;
+					font-weight: bold;
+					color: #4CAF50;
+					letter-spacing: 0.5rem;
+					background-color: #f0f0f0;
+					padding: 1rem 2rem;
+					border-radius: 10px;
+					display: inline-block;
+				}
+				.players-section {
+					margin-bottom: 2rem;
+				}
+				.players-list {
+					background-color: #f9f9f9;
+					border-radius: 5px;
+					padding: 1rem;
+				}
+				.player-item {
+					padding: 0.5rem;
+					margin-bottom: 0.5rem;
+					background-color: white;
+					border-radius: 5px;
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+				}
+				.player-item.current {
+					background-color: #e8f5e9;
+					border: 2px solid #4CAF50;
+				}
+				.player-name {
+					font-weight: bold;
+				}
+				.player-status {
+					font-size: 0.9rem;
+					color: #666;
+				}
+				.start-button {
+					background-color: #4CAF50;
+					color: white;
+					padding: 12px 24px;
+					border: none;
+					border-radius: 5px;
+					cursor: pointer;
+					font-size: 16px;
+					width: 100%;
+					transition: background-color 0.3s;
+				}
+				.start-button:hover {
+					background-color: #45a049;
+				}
+				.start-button:disabled {
+					background-color: #ccc;
+					cursor: not-allowed;
+				}
+				.waiting-message {
+					text-align: center;
+					color: #666;
+					font-style: italic;
+				}
+				.leave-button {
+					background-color: #f44336;
+					color: white;
+					padding: 8px 16px;
+					border: none;
+					border-radius: 5px;
+					cursor: pointer;
+					font-size: 14px;
+					transition: background-color 0.3s;
+				}
+				.leave-button:hover {
+					background-color: #d32f2f;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="lobby-container" hx-get={ fmt.Sprintf("/lobby/%s", game.GameCode) } hx-trigger="every 2s" hx-swap="outerHTML">
+				<h1>Qwixx Game Lobby</h1>
+
+				<div class="game-code">
+					<p>Share this code with friends:</p>
+					<div class="game-code-display">{ game.GameCode }</div>
+				</div>
+
+				<div class="players-section">
+					<h2>Players ({ len(players) }/4)</h2>
+					<div class="players-list">
+						for i, player := range players {
+							<div class={ "player-item", templ.KV("current", player.ID == currentPlayerID) }>
+								<div>
+									<span class="player-name">{ player.Name }</span>
+									if i == 0 {
+										<span class="player-status"> (Host)</span>
+									}
+								</div>
+							</div>
+						}
+						for i := len(players); i < 4; i++ {
+							<div class="player-item" style="opacity: 0.5;">
+								<span class="player-name">Waiting for player...</span>
+							</div>
+						}
+					</div>
+				</div>
+
+				if isCreator {
+					if len(players) >= 2 {
+						<form hx-post={ fmt.Sprintf("/start-game/%s", game.GameCode) }>
+							<button type="submit" class="start-button">
+								Start Game
+							</button>
+						</form>
+					} else {
+						<button class="start-button" disabled>
+							Need at least 2 players to start
+						</button>
+					}
+				} else {
+					<p class="waiting-message">
+						Waiting for the host to start the game...
+					</p>
+				}
+
+				<form hx-post="/leave-game" style="margin-top: 2rem;">
+					<input type="hidden" name="gameCode" value={ game.GameCode }/>
+					<input type="hidden" name="playerID" value={ fmt.Sprintf("%d", currentPlayerID) }/>
+					<button type="submit" class="leave-button">Leave Game</button>
+				</form>
+			</div>
+		</body>
+	</html>
+}

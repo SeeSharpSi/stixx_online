@@ -4,20 +4,212 @@ templ Index() {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
-			<title>Page Title</title>
+			<title>Qwixx Online</title>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<link rel="stylesheet" type="text/css" href="/static/styles.css"/>
 			<script type="text/javascript" src="/static/htmx.min.js"></script>
 			<style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-        }
-    </style>
+				body {
+					font-family: Arial, Helvetica, sans-serif;
+					background-color: #f0f0f0;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					min-height: 100vh;
+					margin: 0;
+				}
+				.container {
+					background-color: white;
+					padding: 2rem;
+					border-radius: 10px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					max-width: 500px;
+					width: 100%;
+				}
+				h1 {
+					text-align: center;
+					color: #333;
+					margin-bottom: 2rem;
+				}
+				.game-options {
+					display: flex;
+					gap: 2rem;
+					margin-bottom: 2rem;
+				}
+				.option {
+					flex: 1;
+					text-align: center;
+				}
+				button {
+					background-color: #4CAF50;
+					color: white;
+					padding: 12px 24px;
+					border: none;
+					border-radius: 5px;
+					cursor: pointer;
+					font-size: 16px;
+					width: 100%;
+					transition: background-color 0.3s;
+				}
+				button:hover {
+					background-color: #45a049;
+				}
+				.form-container {
+					display: none;
+					margin-top: 2rem;
+				}
+				.form-container.active {
+					display: block;
+				}
+				.form-group {
+					margin-bottom: 1rem;
+				}
+				label {
+					display: block;
+					margin-bottom: 0.5rem;
+					font-weight: bold;
+					color: #555;
+				}
+				input[type="text"] {
+					width: 100%;
+					padding: 10px;
+					border: 1px solid #ddd;
+					border-radius: 5px;
+					font-size: 16px;
+					box-sizing: border-box;
+				}
+				input[type="text"]:focus {
+					outline: none;
+					border-color: #4CAF50;
+				}
+				.error {
+					color: #f44336;
+					font-size: 14px;
+					margin-top: 0.5rem;
+				}
+				.success {
+					color: #4CAF50;
+					font-size: 14px;
+					margin-top: 0.5rem;
+				}
+				.back-button {
+					background-color: #888;
+					margin-top: 1rem;
+				}
+				.back-button:hover {
+					background-color: #666;
+				}
+			</style>
 		</head>
 		<body>
-			<h1 hx-get="/test" hx-swap="outerHTML">My Website</h1>
-			<p>A website created by me.</p>
+			<div class="container">
+				<h1>Qwixx Online</h1>
+
+				<div id="main-menu">
+					<div class="game-options">
+						<div class="option">
+							<button onclick="showCreateForm()">Create New Game</button>
+						</div>
+						<div class="option">
+							<button onclick="showJoinForm()">Join Game</button>
+						</div>
+					</div>
+				</div>
+
+				<div id="create-form" class="form-container">
+					<h2>Create New Game</h2>
+					<form hx-post="/create-game" hx-target="#game-response" hx-swap="innerHTML">
+						<div class="form-group">
+							<label for="creator-name">Your Name:</label>
+							<input type="text" id="creator-name" name="name" required/>
+						</div>
+						<button type="submit">Create Game</button>
+					</form>
+					<button class="back-button" onclick="showMainMenu()">Back</button>
+					<div id="game-response"></div>
+				</div>
+
+				<div id="join-form" class="form-container">
+					<h2>Join Existing Game</h2>
+					<form hx-post="/join-game" hx-target="#join-response" hx-swap="innerHTML">
+						<div class="form-group">
+							<label for="player-name">Your Name:</label>
+							<input type="text" id="player-name" name="name" required/>
+						</div>
+						<div class="form-group">
+							<label for="game-code">Game Code:</label>
+							<input type="text" id="game-code" name="gameCode" required
+								   placeholder="Enter 5-character code"
+								   maxlength="5"
+								   style="text-transform: uppercase;"/>
+						</div>
+						<button type="submit">Join Game</button>
+					</form>
+					<button class="back-button" onclick="showMainMenu()">Back</button>
+					<div id="join-response"></div>
+				</div>
+			</div>
+
+			<div id="instructions" style="margin-top: 3rem; padding: 2rem; background-color: #f9f9f9; border-radius: 8px;">
+				<h2 style="text-align: center; margin-bottom: 1.5rem;">How to Play Qwixx</h2>
+				<div style="max-width: 600px; margin: 0 auto;">
+					<p><strong>Objective:</strong> Mark off as many numbers as possible in the four colored rows to score the most points.</p>
+
+					<h3>Game Setup</h3>
+					<ul>
+						<li>2-4 players can play</li>
+						<li>Each player has 4 colored rows: Red (2-12), Yellow (2-12), Green (12-2), Blue (12-2)</li>
+						<li>6 dice are used: 2 white dice and 4 colored dice</li>
+					</ul>
+
+					<h3>How to Play</h3>
+					<ul>
+						<li>On each turn, the active player rolls all 6 dice</li>
+						<li><strong>All players</strong> can mark the sum of the two white dice in any color row</li>
+						<li><strong>Only the active player</strong> can also mark the sum of one white die + one colored die in the matching color row</li>
+						<li>Numbers must be marked from left to right - you can't go back!</li>
+						<li>To lock a row (mark the last number), you need at least 5 marks in that row</li>
+					</ul>
+
+					<h3>Game End</h3>
+					<p>The game ends when either:</p>
+					<ul>
+						<li>2 rows are locked (marked with the rightmost number)</li>
+						<li>A player has 4 penalties</li>
+					</ul>
+
+					<h3>Scoring</h3>
+					<p>Points increase with more marks: 1 mark = 1 point, 2 = 3 points, 3 = 6 points, and so on up to 12 marks = 78 points. Each penalty costs 5 points.</p>
+				</div>
+			</div>
+
+			<script>
+				function showCreateForm() {
+					document.getElementById('main-menu').style.display = 'none';
+					document.getElementById('create-form').classList.add('active');
+					document.getElementById('join-form').classList.remove('active');
+				}
+
+				function showJoinForm() {
+					document.getElementById('main-menu').style.display = 'none';
+					document.getElementById('join-form').classList.add('active');
+					document.getElementById('create-form').classList.remove('active');
+				}
+
+				function showMainMenu() {
+					document.getElementById('main-menu').style.display = 'block';
+					document.getElementById('create-form').classList.remove('active');
+					document.getElementById('join-form').classList.remove('active');
+					document.getElementById('game-response').innerHTML = '';
+					document.getElementById('join-response').innerHTML = '';
+				}
+
+				// Auto-uppercase game code input
+				document.getElementById('game-code').addEventListener('input', function(e) {
+					e.target.value = e.target.value.toUpperCase();
+				});
+			</script>
 		</body>
 	</html>
 }

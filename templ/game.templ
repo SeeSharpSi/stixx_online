@@ -1,0 +1,417 @@
+package templ
+
+import (
+	"seesharpsi/stixx_online/game"
+	"fmt"
+)
+
+templ Game(gameState *game.GameState, currentPlayerID int, possibleMoves []game.Move, playerMarks map[int]map[string][]int, scores map[int]int) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<title>Qwixx - Game</title>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<link rel="stylesheet" type="text/css" href="/static/styles.css"/>
+			<script type="text/javascript" src="/static/htmx.min.js"></script>
+			<style>
+				body {
+					font-family: Arial, Helvetica, sans-serif;
+					background-color: #f0f0f0;
+					margin: 0;
+					padding: 20px;
+				}
+				.game-container {
+					max-width: 1200px;
+					margin: 0 auto;
+					background-color: white;
+					padding: 2rem;
+					border-radius: 10px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				}
+				.game-header {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					margin-bottom: 2rem;
+				}
+				h1 {
+					color: #333;
+					margin: 0;
+				}
+				.dice-section {
+					background-color: #f9f9f9;
+					padding: 1.5rem;
+					border-radius: 8px;
+					margin-bottom: 2rem;
+					text-align: center;
+				}
+				.dice-row {
+					display: flex;
+					justify-content: center;
+					gap: 1rem;
+					margin-bottom: 1rem;
+				}
+				.die {
+					width: 50px;
+					height: 50px;
+					background-color: white;
+					border: 2px solid #333;
+					border-radius: 8px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 24px;
+					font-weight: bold;
+				}
+				.die.white {
+					background-color: #fff;
+				}
+				.die.red {
+					background-color: #ffcdd2;
+					border-color: #f44336;
+				}
+				.die.yellow {
+					background-color: #fff9c4;
+					border-color: #ffeb3b;
+				}
+				.die.green {
+					background-color: #c8e6c9;
+					border-color: #4caf50;
+				}
+				.die.blue {
+					background-color: #bbdefb;
+					border-color: #2196f3;
+				}
+				.game-board {
+					margin-bottom: 2rem;
+				}
+				.color-row {
+					display: flex;
+					align-items: center;
+					margin-bottom: 1rem;
+					padding: 1rem;
+					border-radius: 8px;
+				}
+				.color-row.red {
+					background-color: #ffebee;
+				}
+				.color-row.yellow {
+					background-color: #fffde7;
+				}
+				.color-row.green {
+					background-color: #e8f5e9;
+				}
+				.color-row.blue {
+					background-color: #e3f2fd;
+				}
+				.color-row.locked {
+					opacity: 0.5;
+					position: relative;
+				}
+				.color-row.locked::after {
+					content: "LOCKED";
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					transform: translate(-50%, -50%);
+					font-size: 2rem;
+					font-weight: bold;
+					color: rgba(0, 0, 0, 0.3);
+				}
+				.color-label {
+					width: 80px;
+					font-weight: bold;
+					text-transform: uppercase;
+					font-size: 1.2rem;
+				}
+				.numbers {
+					display: flex;
+					gap: 0.5rem;
+					flex-wrap: wrap;
+				}
+				.number-box {
+					width: 50px;
+					height: 50px;
+					border: 2px solid #333;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+					font-size: 18px;
+					border-radius: 5px;
+					cursor: pointer;
+					background-color: white;
+					position: relative;
+				}
+				.number-box.marked {
+					background-color: #333;
+					color: white;
+				}
+				.number-box.possible {
+					border-color: #4caf50;
+					border-width: 3px;
+					box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+				}
+				.number-box.possible:hover {
+					background-color: #e8f5e9;
+				}
+				.number-box.last-number {
+					border-style: double;
+					border-width: 4px;
+				}
+				.player-mark {
+					position: absolute;
+					bottom: 2px;
+					right: 2px;
+					font-size: 10px;
+					background-color: rgba(0, 0, 0, 0.7);
+					color: white;
+					padding: 2px 4px;
+					border-radius: 3px;
+				}
+				.players-section {
+					display: grid;
+					grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+					gap: 1rem;
+					margin-bottom: 2rem;
+				}
+				.player-card {
+					background-color: #f9f9f9;
+					padding: 1rem;
+					border-radius: 8px;
+					border: 2px solid transparent;
+				}
+				.player-card.current-turn {
+					border-color: #4caf50;
+					background-color: #e8f5e9;
+				}
+				.player-name {
+					font-weight: bold;
+					margin-bottom: 0.5rem;
+				}
+				.player-stats {
+					display: flex;
+					justify-content: space-between;
+					font-size: 0.9rem;
+				}
+				.control-section {
+					text-align: center;
+					margin-top: 2rem;
+				}
+				.action-button {
+					background-color: #4caf50;
+					color: white;
+					padding: 12px 24px;
+					border: none;
+					border-radius: 5px;
+					cursor: pointer;
+					font-size: 16px;
+					margin: 0.5rem;
+					transition: background-color 0.3s;
+				}
+				.action-button:hover {
+					background-color: #45a049;
+				}
+				.action-button.penalty {
+					background-color: #f44336;
+				}
+				.action-button.penalty:hover {
+					background-color: #d32f2f;
+				}
+				.action-button:disabled {
+					background-color: #ccc;
+					cursor: not-allowed;
+				}
+				.status-message {
+					text-align: center;
+					padding: 1rem;
+					margin: 1rem 0;
+					border-radius: 5px;
+					font-weight: bold;
+				}
+				.status-message.info {
+					background-color: #e3f2fd;
+					color: #1976d2;
+				}
+				.status-message.warning {
+					background-color: #fff3e0;
+					color: #f57c00;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="game-container" hx-get={ fmt.Sprintf("/game/%s", gameState.Game.GameCode) } hx-trigger="every 3s" hx-swap="outerHTML">
+				<div class="game-header">
+					<h1>Qwixx Game</h1>
+					<div>Game Code: <strong>{ gameState.Game.GameCode }</strong></div>
+				</div>
+
+				if gameState.Game.Status == "finished" {
+					<div class="status-message warning">
+						Game Over! Check the final scores below.
+					</div>
+				}
+
+				<div class="dice-section">
+					<h3>Current Dice</h3>
+					if gameState.Game.DiceRolled {
+						<div class="dice-row">
+							<div class="die white">{ fmt.Sprintf("%d", gameState.Game.WhiteDice1) }</div>
+							<div class="die white">{ fmt.Sprintf("%d", gameState.Game.WhiteDice2) }</div>
+							<div style="margin: 0 20px;">White Sum: <strong>{ fmt.Sprintf("%d", gameState.Game.WhiteDice1 + gameState.Game.WhiteDice2) }</strong></div>
+						</div>
+						<div class="dice-row">
+							<div class="die red">{ fmt.Sprintf("%d", gameState.Game.RedDice) }</div>
+							<div class="die yellow">{ fmt.Sprintf("%d", gameState.Game.YellowDice) }</div>
+							<div class="die green">{ fmt.Sprintf("%d", gameState.Game.GreenDice) }</div>
+							<div class="die blue">{ fmt.Sprintf("%d", gameState.Game.BlueDice) }</div>
+						</div>
+						<div style="margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #666;">
+							if gameState.Game.WhiteMarkUsed {
+								<span style="color: #f44336;">✓ White dice used</span>
+							} else {
+								<span style="color: #4caf50;">White dice available</span>
+							}
+							if gameState.Players[gameState.Game.CurrentPlayerIndex].ID == currentPlayerID {
+								<span style="margin-left: 2rem;">
+									if gameState.Game.ColoredMarkUsed {
+										<span style="color: #f44336;">✓ Colored dice used</span>
+									} else {
+										<span style="color: #4caf50;">Colored dice available</span>
+									}
+								</span>
+							}
+						</div>
+					} else {
+						<div style="text-align: center; padding: 2rem; color: #666;">
+							<p>Dice not rolled yet</p>
+						</div>
+					}
+				</div>
+
+				<div class="game-board">
+					for _, color := range []string{"red", "yellow", "green", "blue"} {
+						@renderColorRow(color, gameState.Rows[color], possibleMoves, playerMarks, currentPlayerID)
+					}
+				</div>
+
+				<div class="players-section">
+					for i, player := range gameState.Players {
+						<div class={ "player-card", templ.KV("current-turn", i == gameState.Game.CurrentPlayerIndex) }>
+							<div class="player-name">
+								{ player.Name }
+								if player.ID == currentPlayerID {
+									{ " (You)" }
+								}
+								if i == gameState.Game.CurrentPlayerIndex {
+									{ " - Current Turn" }
+								}
+							</div>
+							<div class="player-stats">
+								<span>Score: { fmt.Sprintf("%d", scores[player.ID]) }</span>
+								<span>Penalties: { fmt.Sprintf("%d", player.Penalties) }</span>
+							</div>
+						</div>
+					}
+				</div>
+
+				if gameState.Game.Status == "active" {
+					<div class="control-section">
+						if gameState.Players[gameState.Game.CurrentPlayerIndex].ID == currentPlayerID {
+							if !gameState.Game.DiceRolled {
+								<div class="status-message info">
+									It's your turn! Roll the dice to start.
+								</div>
+								<form hx-post={ fmt.Sprintf("/roll-dice/%s", gameState.Game.GameCode) } style="display: inline;">
+									<button type="submit" class="action-button">Roll Dice</button>
+								</form>
+							} else {
+								<div class="status-message info">
+									if !gameState.Game.WhiteMarkUsed && !gameState.Game.ColoredMarkUsed {
+										Make your moves! You can use the white dice sum and/or a colored die combination.
+									} else if !gameState.Game.WhiteMarkUsed {
+										You can still use the white dice sum in any color.
+									} else if !gameState.Game.ColoredMarkUsed {
+										You can still use a white die + colored die combination.
+									} else {
+										Both moves used! Your turn will end automatically.
+									}
+								</div>
+								if !gameState.Game.ColoredMarkUsed {
+									<form hx-post={ fmt.Sprintf("/end-turn/%s", gameState.Game.GameCode) } style="display: inline;">
+										<button type="submit" class="action-button penalty">Take Penalty & End Turn</button>
+									</form>
+								}
+							}
+						} else {
+							<div class="status-message info">
+								if gameState.Game.DiceRolled {
+									{ gameState.Players[gameState.Game.CurrentPlayerIndex].Name } is taking their turn.
+									if !gameState.Game.WhiteMarkUsed {
+										You can use the white dice sum!
+									} else {
+										Waiting for them to finish...
+									}
+								} else {
+									Waiting for { gameState.Players[gameState.Game.CurrentPlayerIndex].Name } to roll the dice...
+								}
+							</div>
+						}
+					</div>
+				}
+			</div>
+		</body>
+	</html>
+}
+
+templ renderColorRow(color string, row game.Row, possibleMoves []game.Move, playerMarks map[int]map[string][]int, currentPlayerID int) {
+	<div class={ "color-row", color, templ.KV("locked", row.Locked) }>
+		<div class="color-label">{ color }</div>
+		<div class="numbers">
+			for i, number := range row.Numbers {
+				@renderNumberBox(color, number, i == len(row.Numbers)-1, possibleMoves, playerMarks, currentPlayerID)
+			}
+		</div>
+	</div>
+}
+
+templ renderNumberBox(color string, number int, isLast bool, possibleMoves []game.Move, playerMarks map[int]map[string][]int, currentPlayerID int) {
+	<div
+		class={
+			"number-box",
+			templ.KV("last-number", isLast),
+			templ.KV("marked", isNumberMarkedByPlayer(playerMarks[currentPlayerID][color], number)),
+			templ.KV("possible", isPossibleMove(color, number, possibleMoves))
+		}
+		if isPossibleMove(color, number, possibleMoves) {
+			hx-post={ fmt.Sprintf("/make-move") }
+			hx-vals={ fmt.Sprintf(`{"color":"%s","number":%d}`, color, number) }
+		}
+	>
+		{ fmt.Sprintf("%d", number) }
+		for playerID, marks := range playerMarks {
+			if playerID != currentPlayerID && isNumberMarkedByPlayer(marks[color], number) {
+				<span class="player-mark">P{ fmt.Sprintf("%d", playerID) }</span>
+			}
+		}
+	</div>
+}
+
+func isNumberMarkedByPlayer(marks []int, number int) bool {
+	for _, mark := range marks {
+		if mark == number {
+			return true
+		}
+	}
+	return false
+}
+
+func isPossibleMove(color string, number int, moves []game.Move) bool {
+	for _, move := range moves {
+		if move.Color == color && move.Number == number {
+			return true
+		}
+	}
+	return false
+}
