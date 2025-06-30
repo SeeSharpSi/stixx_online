@@ -122,14 +122,16 @@ func CreateGame(w http.ResponseWriter, r *http.Request) {
 	// Create game
 	game, err := db.CreateGame()
 	if err != nil {
-		w.Write([]byte(`<div class="error">Failed to create game</div>`))
+		errorMsg := fmt.Sprintf(`<div class="error">Failed to create game: %s</div>`, err.Error())
+		w.Write([]byte(errorMsg))
 		return
 	}
 
 	// Join as first player
 	player, err := db.JoinGame(game.GameCode, name)
 	if err != nil {
-		w.Write([]byte(`<div class="error">Failed to join game</div>`))
+		errorMsg := fmt.Sprintf(`<div class="error">Failed to join game: %s</div>`, err.Error())
+		w.Write([]byte(errorMsg))
 		return
 	}
 
@@ -175,7 +177,8 @@ func JoinGame(w http.ResponseWriter, r *http.Request) {
 	// Join game
 	player, err := db.JoinGame(gameCode, name)
 	if err != nil {
-		w.Write([]byte(`<div class="error">Failed to join game. Check the game code and try again.</div>`))
+		errorMsg := fmt.Sprintf(`<div class="error">Failed to join game: %s</div>`, err.Error())
+		w.Write([]byte(errorMsg))
 		return
 	}
 

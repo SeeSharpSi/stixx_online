@@ -56,7 +56,8 @@ func InitDB() error {
 		joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		penalties INTEGER DEFAULT 0,
 		is_active BOOLEAN DEFAULT TRUE,
-		FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
+		FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+		UNIQUE(game_id, name)
 	);
 
 	CREATE TABLE IF NOT EXISTS player_marks (
@@ -196,14 +197,39 @@ func JoinGame(gameCode, playerName string) (*Player, error) {
 		return nil, err
 	}
 
-	// Count existing players
+	// Check for existing player with that name
+	var existingPlayer Player
+	err = DB.QueryRow(`
+		SELECT id, game_id, name, turn_order, joined_at, penalties, is_active
+		FROM players WHERE game_id = ? AND name = ?
+	`, game.ID, playerName).Scan(
+		&existingPlayer.ID, &existingPlayer.GameID, &existingPlayer.Name, &existingPlayer.TurnOrder,
+		&existingPlayer.JoinedAt, &existingPlayer.Penalties, &existingPlayer.IsActive,
+	)
+
+	if err == nil {
+		// Player found, return them (rejoin)
+		return &existingPlayer, nil
+	}
+
+	if err != sql.ErrNoRows {
+		// A different database error occurred
+		return nil, err
+	}
+
+	// Player does not exist, check if game is open for new players
+	if game.Status != "waiting" {
+		return nil, fmt.Errorf("game has already started, so you can't join with a new name")
+	}
+
+	// Count existing players to determine turn order for new player
 	var playerCount int
 	err = DB.QueryRow("SELECT COUNT(*) FROM players WHERE game_id = ?", game.ID).Scan(&playerCount)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create player
+	// Create new player
 	result, err := DB.Exec(
 		"INSERT INTO players (game_id, name, turn_order) VALUES (?, ?, ?)",
 		game.ID, playerName, playerCount,
