@@ -19,7 +19,7 @@ A web-based multiplayer implementation of the popular dice game Qwixx using Go, 
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/SeeSharpSi/stixx_online
 cd stixx_online
 ```
 
